@@ -1,103 +1,158 @@
 # git-hub-2
-Git-da xatolarni tuzatish, o'zgarishlarni orqaga qaytarish (reset, revert), yo'qolgan commit'larni topish (reflog) va keraksiz fayllarni tozalash bo'yicha to'liq amaliy qo'llanma.
+Mana, Git-da yuzaga kelishi mumkin bo'lgan eng qiyin va qo'rqinchli vaziyatlardan xotirjamlik bilan chiqib ketish bo'yicha amaliy va to'liq "Qutqaruv qo'llanmasi".
 
-1. git reset --soft (Commit'ni ochish)
---soft buyrug'i oxirgi commit(lar)ni o'chiradi (bekor qiladi), lekin u commit ichidagi yozilgan kodlarni butunlay saqlab qoladi va ularni Staging Area (git add qilingan holat)ga qaytaradi.
-
-Bash
-# Oxirgi 1 ta commit'ni bekor qilish
-git reset --soft HEAD~1
-Qachon kerak? Commit xabarini noto'g'ri yozsangiz yoki commit'ga yana bir nechta faylni qo'shish esdan chiqqan bo'lsa. Kod o'chmaydi, shunchaki commit ochiladi.
-
-2. git reset --mixed (Default holat)
-Agar git reset buyrug'iga hech qanday kalit so'z bermasangiz, u sukut bo'yicha --mixed rejimida ishlaydi. U commit'ni o'chiradi, lekin o'zgarishlarni Working Directory (ishchi joy, ya'ni git add qilinmagan holat)ga qaytaradi.
+1. Senariy 1: Branch o'chirish + reflog bilan qaytarish
+Nima qildim?
+Siz o'z ustingizda ishlagan va hali mainga qo'shilmagan muhim feature-xyz branch'ingizni adashib o'chirib yubordingiz.
 
 Bash
-# default rejim: oxirgi commit'ni ochish va staging'dan chiqarish
-git reset HEAD~1
-Qachon kerak? Qilingan o'zgarishlar qolishi kerak, lekin ularni qaytadan tartiblab, bo'lib-bo'lib commit qilmoqchi bo'lsangiz.
+git branch -D feature-xyz
+(Git ogohlantirish bergan bo'lsa ham -D kaliti bilan majburlab o'chirib yuborildi).
 
-3. git reset --hard xavfli misol + reflog bilan qutqarish
---hard eng xavfli buyruq hisoblanadi, chunki u commit'ni ham, kiritilgan o'zgarishlarni ham butunlay o'chirib yuboradi.
+Nima bo'ldi?
+Branch ko'rinmay qoldi, unga checkout qilib bo'lmaydi. Kodlar yo'qolgandek tuyulmoqda.
 
-Xavfli misol:
-Bash
-# Oxirgi commit va undagi barcha kodlarni butunlay o'chirish
-git reset --hard HEAD~1
-Agar buni adashib yozib yuborsangiz, oxirgi yozgan kodlaringiz g'oyib bo'ladi.
-
-reflog yordamida qutqarish:
-Git siz o'chirdi deb o'ylagan commit'larni darhol bazadan o'chirib yubormaydi. Ularni reflog orqali topish mumkin:
+Qanday qutqardim?
+HEAD ko'rsatkichining oxirgi harakatlarini tekshiramiz:
 
 Bash
-# 1. Hamma harakatlar tarixini ko'ramiz
 git reflog
-Chiquvchi ro'yxatdan o'chib ketgan commit'ni topamiz (masalan, HEAD@{1} o'chirishdan oldingi holat bo'ladi):
+Chiqqan ro'yxatdan o'chib ketgan branch'ning eng oxirgi commit'ini (masalan, moving from feature-xyz to main yozuvidan bitta oldingi qatorni) va uning xesh kodini (masalan, b3c4d5e) topamiz.
 
-Plaintext
-7a3b2c1 HEAD@{0}: reset: moving to HEAD~1
-a1b2c3d HEAD@{1}: commit: Muhim funksiya yozilgandi (Mana shu bizga kerak!)
+O'sha commit turgan joydan branch'ni qayta tiklaymiz:
+
 Bash
-# 2. O'sha commit'ga qaytamiz va hamma narsani tiklaymiz
+git branch feature-xyz b3c4d5e
+2. Senariy 2: reset --hard + reflog bilan qaytarish
+Nima qildim?
+Oxirgi bir nechta commit'larni o'chirish maqsadida noto'g'ri masofani ko'rsatib, hamma narsani tozalab yuboradigan buyruqni berdingiz:
+
+Bash
+git reset --hard HEAD~3
+Nima bo'ldi?
+Oxirgi 3 ta commit va ularning ichidagi barcha yozilgan kodlar ham working directory'dan, ham tarixdan butunlay g'oyib bo'ldi.
+
+Qanday qutqardim?
+Git-ning xotira xaritasini ochamiz:
+
+Bash
+git reflog
+Biz reset buyrug'ini berishimizdan to'g'ri oldingi holatni (ro'yxatda HEAD@{1} yoki o'sha commit xeshini, masalan, a1b2c3d) aniqlaymiz.
+
+Vaqtni orqaga qaytaramiz:
+
+Bash
 git reset --hard a1b2c3d
-4. git revert bitta commit
-revert buyrug'i resetdan farqli o'laroq tarixni o'chirmaydi. U ko'rsatilgan commit'ning teskari o'zgarishini qiluvchi mutlaqo yangi commit yaratadi.
+Hamma yo'qolgan kodlar va commit'lar o'z joyiga qaytadi.
+
+3. Senariy 3: Push qilingan yomon commit + revert bilan bekor
+Nima qildim?
+Lokalda xato kod yozdingiz, commit qildingiz va uni jamoaviy main (yoki develop) branch'ga push qilib yubordingiz:
 
 Bash
-# a1b2c3d commit'ida nima yozilgan bo'lsa, o'shani teskarisini qilib yangi commit yaratadi
-git revert a1b2c3d
-Qachon kerak? Agar xato kodingiz allaqachon serverga (remote) push qilingan bo'lsa, tarixni buzmaslik uchun faqat revert ishlatiladi.
+git push origin main
+Nima bo'ldi?
+Xatoli kod hamma jamoadoshlaringizga yetib bordi va serverdagi loyiha buzildi (build fail bo'ldi).
 
-5. git revert bir nechta commit
-Agar bir nechta commit'larni ketma-ketlikda bekor qilish kerak bo'lsa, oraliqni ko'rsatish mumkin.
+Qanday qutqardim?
+Server tarixi ommaviy bo'lgani uchun uni reset bilan o'chirib bo'lmaydi (boshqalarda chalkashlik bo'ladi).
 
-Bash
-# Oldingi 3 ta commit'ni teskari o'zgarish bilan qaytarish (lekin commit qilmasdan turish)
-git revert -n HEAD~3..HEAD
--n yoki --no-commit kaliti har bitta commit uchun alohida-alohida revert-commit yaratish o'rniga, barcha teskari o'zgarishlarni yig'ib, bitta yakuniy commit qilish imkonini beradi.
+O'sha yomon commit'ning xesh kodini (e5f6g7h) topamiz.
 
-6. git reflog bilan tarix kuzatish
-git log faqat joriy branch'dagi commit'lar tarixini ko'rsatsa, git reflog siz lokal kompyuterda HEAD ko'rsatkichini qayerga ko'chirgan bo'lsangiz (checkout, reset, merge, commit), barchasini ko'rsatadi.
+Unga qarama-qarshi bo'lgan yangi tuzatuvchi commit yaratamiz:
 
 Bash
-git reflog
-Bu buyruq Git tizimidagi sizning "qutqaruv xaritangiz" hisoblanadi. Undagi har bir satr o'zining qisqa SHA-1 xesh kodiga ega.
-
-7. Reflog SHA dan yangi branch yaratish
-Aytaylik, siz reflog ichidan qaysidir yo'qolib ketgan eski holatni topdingiz va joriy branch'ingizni buzmagan holda o'sha holatni alohida ko'rib chiqmoqchisiz.
+git revert e5f6g7h
+Hosil bo'lgan yangi "safe" commit'ni serverga yuboramiz:
 
 Bash
-# reflog'dan olingan a1b2c3d xesh kodidan yangi 'rescue-branch' ochish
-git branch rescue-branch a1b2c3d
-Endi bemalol git checkout rescue-branch qilib, o'sha yo'qolgan kodlarni tekshirib olishingiz mumkin.
-
-8. Detached HEAD'dan chiqish
-Agar siz branch'ga emas, to'g'ridan-to'g'ri qandaydir commit xeshiga checkout qilsangiz (git checkout a1b2c3d), Git Detached HEAD (ajralgan HEAD) holatiga o'tadi. Bu holatda qilingan commit'lar hech qaysi branch'ga tegishli bo'lmaydi va yo'qolib ketishi mumkin.
-
-Detached HEAD'dan chiqish yo'llari:
-O'zgarishlarni saqlab qolgan holda chiqish (Yangi branch ochish):
+git push origin main
+4. Senariy 4: Wrong branch'da commit + reset main'da + branch yaratish
+Nima qildim?
+Siz yangi vazifa uchun alohida branch ochish esingizdan chiqib, to'g'ridan-to'g'ri main branch'ida kod yozdingiz va 2 ta commit qilib yubordingiz.
 
 Bash
-git checkout -b yangi-branch-nomi
-O'zgarishlarni tashlab yuborib, o'z branch'ingizga qaytish:
+# Hozir main branch'damiz
+git commit -m "Yangi feature logikasi 1"
+git commit -m "Yangi feature logikasi 2"
+Nima bo'ldi?
+main branch tarixi buzildi, u yerda hali tugallanmagan xom kodlar paydo bo'lib qoldi.
+
+Qanday qutqardim?
+Hozirgi turgan joyimizdan (barcha yangi commit'lar bilan) yangi to'g'ri branch ochib olamiz:
+
+Bash
+git checkout -b feature/my-new-task
+(Endi bu commit'lar xavfsiz joyda).
+
+Qayta main branch'iga o'tamiz:
 
 Bash
 git checkout main
-9. git clean -fd kuzatilmayotgan fayllarni o'chirish
-Git loyihangizda paydo bo'lgan, lekin hali git add qilinmagan (untracked) ortiqcha fayl va papkalarni kompyuterdan butunlay o'chirib tashlash uchun ishlatiladi.
+mainni o'sha 2 ta noto'g'ri commit qo'shilishidan oldingi holatiga qaytaramiz (kodlar o'chmaydi, chunki ular yangi branch'da qoldi):
 
 Bash
-# -f (force) - majburiy o'chirish, -d (directory) - papkalarni ham qo'shib o'chirish
-git clean -fd
-Maslahat: Nimalar o'chib ketishini oldindan ko'rish uchun test rejimini ishlating: git clean -nd
+git reset --hard HEAD~2
+5. Senariy 5: Detached HEAD'da ish + branch yaratish reflog'dan
+Nima qildim?
+Shunchaki eski commit'ni ko'rish uchun git checkout c3b2a1d qildingiz va o'sha yerda turib kod yozib, commit qilib yubordingiz.
 
-10. Hisobot: Qachon reset, qachon revert?
-Mezon	git reset	git revert
-Asosiy vazifasi	Tarixni orqaga qaytaradi (commit'larni o'chiradi/ochadi).	Tarixni o'chirmaydi, teskari o'zgarishli yangi commit qo'shadi.
-Qayerda ishlatiladi?	Faqat lokal o'zgarishlarda. Serverga push qilinmagan kodlar uchun.	Serverga push qilingan (public) commit'larni xavfsiz bekor qilishda.
-Tariqqa ta'siri	Tarixni tozalaydi va chiziqli qiladi (orqaga suradi).	Tarix o'smaydi, aksincha unga yangi revert commit qo'shilgani ko'rinadi.
-Xavf darajasi	Yuqori (ayniqsa --hard ishlatilganda).	Judayam past va xavfsiz.
-Qisqa qoida:
-Agar xatoni qildingiz, lekin hali push qilmadingiz → git reset ishlating.
+Nima bo'ldi?
+Siz Detached HEAD (hech qaysi branch'ga birikmagan erkin HEAD) holatida edingiz. Boshqa branch'ga (masalan, git checkout main) o'tganingizdan keyin o'sha yozgan commit'ingiz "havoda" muallaq qolib ketdi va yo'qoldi.
 
-Agar xatoni qildingiz va u allaqachon serverga ketdi → git revert ishlating.
+Qanday qutqardim?
+Yana qutqaruvchimizni chaqiramiz:
+
+Bash
+git reflog
+Detached HEAD holatida qilgan commit'ingiz xesh kodini (masalan, f9e8d7c) topasiz.
+
+O'sha havoda qolib ketgan commit'ni o'z ichiga olgan yangi branch ochib, uni qutqarib qolasiz:
+
+Bash
+git branch saved-feature f9e8d7c
+Bonus Senariy 6: rebase --abort bilan bekor qilish
+Nima qildim?
+git rebase main buyrug'ini berdingiz, lekin juda ko'p va tushunarsiz konfliktlar (ziddiyatlar) chiqib ketdi. Kod chalkashib ketdi.
+
+Nima bo'ldi?
+Rebase jarayoni o'rtasida qolib ketdingiz, nima qilishni bilmayapsiz, lokal fayllar buzilgan holatda turibdi.
+
+Qanday qutqardim?
+Hech narsani qo'lda tuzatishga urinib o'tirmasdan, hammasini rebase boshlanishidan oldingi holatga qaytarish buyrug'ini berasiz:
+
+Bash
+git rebase --abort
+Loyiha xuddi rebase boshlanmagandek avvalgi holatiga qaytadi.
+
+Bonus Senariy 7: git fsck --lost-found ishlatish
+Nima qildim?
+Siz daxshatli chalkashlik qildingiz, hatto reflog ham tozalangan yoki u yerdan ham kerakli narsani topa olmayapsiz.
+
+Nima bo'ldi?
+Git obyektlar bazasida yetim (dangling) qolib ketgan, hech qaysi branch yoki havola ko'rsatmayotgan commit'lar bor, lekin ularning SHA xeshini bilmaysiz.
+
+Qanday qutqardim?
+Git-ning ichki fayl tizimini tekshirish (file system check) buyrug'ini bajaramiz:
+
+Bash
+git fsck --lost-found
+Natija: Git barcha yetim qolgan commit va fayllarni loyihangiz ichidagi .git/lost-found/commit/ papkasiga yig'ib beradi. U yerdagi commit'larni git show <commit_id> qilib ko'rib, ichidagi kodni topib olishingiz mumkin.
+
+Yakuniy Hisobot (Summary Report)
+Senariy	Nima qildim?	Nima bo'ldi?	Qanday qutqardim?	Olgan saboqlarim (Takeaways)
+1. Branch o'chirish	git branch -D	Branch tarixdan o'chdi	reflog + git branch <nomi> <sha>	Branch bu shunchaki pointer (ko'rsatkich). Commit'lar bazada turadi.
+2. Reset --hard	git reset --hard HEAD~3	Commit va kodlar yo'qoldi	reflog dan eski xeshni topib reset --hard	--hard xavfli, lekin lokal harakatlar doim reflogda muhrlanadi.
+3. Push yomon commit	git push origin main	Serverdagi loyiha buzildi	git revert <sha> + git push	Server tarixini o'chirma, xatoni teskari o'zgarish bilan tuzat.
+4. Wrong branch commit	mainda yangi kod yozildi	main tarixi bulg'andi	Yangi branch ochib, mainni reset --hard qilish	Ish boshlashdan oldin doim git status va to'g'ri branch'dalikni tekshir.
+5. Detached HEAD	Erkin holatda commit qilindi	Boshqa branch'ga o'tgach kod yo'qoldi	reflog dan commit SHA topib branch ochish	Detached HEAD rejimida uzoq qolma, darhol branch ochib ol.
+6. Rebase chalkashlik	Murakkab rebase konfliktlari	Rebase o'rtasida qolib ketish	git rebase --abort	Agar jarayon nazoratdan chiqsa, qo'rqmasdan abort qilish mumkin.
+7. Oxirgi chora (fsck)	Hamma narsa aralashib ketdi	Reflog'dan ham umid uzildi	git fsck --lost-found	Git hech narsani osonlikcha o'chirmaydi, fayl tizimidan ham qidirsa bo'ladi.
+Eng katta saboq: Panika qilmaslik!
+Git-da ishlashda eng muhim narsa buyruqlarni yodlash emas, balki xotirjamlikni saqlashdir.
+
+Git — bu vaqt mashinasi: Siz terminalda "o'chirish" buyrug'ini berganingizda, Git uni zaxira xotirasiga yashirib qo'yadi. Tizim sizni xatolardan himoya qilish uchun qurilgan.
+
+Qo'rquv xatoni kattalashtiradi: Panikaga tushgan dasturchi internetdan ko'rgan har xil kuchli force buyruqlarini ketma-ket yozib, ahvolni battar qiladi.
+
+Formula oddiy: Muammo bo'ldimi? Klaviaturadan qo'lingizni oling → Chuqur nafas oling → git status va git reflog buyruqlarini yozib, tarixni ko'zdan kechiring. Yechim doim o'sha yerda bo'ladi!
