@@ -1,119 +1,107 @@
 # git-hub-2
-Git — zamonaviy dasturlashda versiyalarni boshqarish tizimi (VCS) bo'lib, loyihadagi o'zgarishlarni bosqichma-bosqich yozib borish uchun xizmat qiladi. Quyida keltirilgan barcha Git buyruqlari va qadamlari amaliy ketma-ketlikda ko'rsatilgan.
+Git-ning "sehrli" va eng kuchli vositalari hisoblangan stash, cherry-pick, amend va aliases tushunchalari loyihani boshqarishni yangi bosqichga olib chiqadi. Quyida har bir buyruqning batafsil amaliy qo'llanmasi keltirilgan.
 
-1. Global sozlamalarni o'rnatish (git config)
-Git-da birinchi marta ishlashdan oldin commit (o'zgarishlar) kim tomonidan qilinganini bilish uchun ism va elektron pochtani sozlash shart:
+1. git stash — Ishni Vaqtincha Yashirish
+git stash joriy ishchi papkadagi o'zgarishlarni (hali commit qilinmagan kodlarni) vaqtincha xotiraga olib, ishchi holatni toza (oxirgi commit holatiga) keltirish uchun ishlatiladi.
 
-Bash
-git config --global user.name "Sardor Rahimov"
-git config --global user.email "sardor@example.com"
-2. Yangi loyiha ochish va uni faollashtirish (git init)
-Yangi papka ochamiz, uning ichiga kiramiz va bo'sh Git repozitoriysini ishga tushiramiz:
+A) 3 ta Haqiqiy Vaziyat:
+Yarim qolgan ish (Context Switch): Biror funksiya ustida ishlayapsiz, kod hali tayyor emas (chala). Shu paytda favqulodda jiddiy xatoni (hotfix) tuzatish topshirig'i keldi. Chala kodni commit qilmaslik uchun uni stash qilib turasiz.
 
-Bash
-mkdir my-awesome-app
-cd my-awesome-app
-git init
-Natija: Papka ichida yashirin .git qoplami ochiladi. Bu Git barcha o'zgarishlarni yozib boradigan "miya" hisoblanadi.
+Pull Conflict oldini olish: Masofaviy repozitiyadan git pull qilmoqchisiz, lekin siz o'zgartirgan fayllar serverda ham o'zgargan bo'lsa, Git pull qilishga yo'l qo'ymaydi. O'zgarishlaringizni stash qilib, pull qilib, keyin o'zgarishlarni qaytarasiz.
 
-3. Ataylab xato: git add qilmasdan git commit yozish
-Git qanday ishlashini tushunish uchun yangi index.html faylini ochamiz va uni to'g'ridan-to'g'ri commit qilishga urinamiz:
+Eksperiment (Tajriba): Kodga biror yangi g'oyani sinab ko'rmoqchisiz, lekin u o'xshamadimi yoki yo'qmi aniqmas. Asosiy kodni buzmaslik uchun joriy o'zgarishlarni saqlab qo'yib, toza kodda eksperiment qilsa bo'ladi.
 
-Bash
-touch index.html
-git commit -m "feat: yangi bosh sahifa qo'shildi"
-Natija (Xatolik xabari):
+B) Stash Buyruqlari:
+git stash list — Xotirada saqlangan barcha stashlar ro'yxatini ko'rsatadi (stash@{0}, stash@{1}).
 
-Plaintext
-On branch main
-Untracked files:
-  index.html
+git stash apply — Stashdagi o'zgarishlarni kodga qaytaradi, lekin stashni ro'yxatdan o'chirmaydi.
 
-nothing added to commit but untracked files present
-Sababi va tushuntirish: Git tizimida Staging Area (Kutish zal) tushunchasi bor. Fayl yaratilgach, u avval git add buyrug'i orqali kutish zaliga o'tkazilishi shart. Git loyihadagi har bir faylni o'z-o'zidan commit-ga qo'shmaydi. Biz unga qaysi fayllarni rasmga (commit) tushirish kerakligini git add orqali aytishimiz kerak.
+git stash pop — Stashdagi o'zgarishlarni kodga qaytaradi va uni ro'yxatdan o'chirib tashlaydi.
 
-4. Ketma-ket 5 ta Commit (Conventional Commits formatida)
-Conventional Commits — dasturchilar orasidagi standart bo'lib, commit matnidan loyihada nima o'zgarganini darrov bilish imkonini beradi. Odatda quyidagi turlardan foydalaniladi:
+git stash drop stash@{0} — Muayyan bir stashni ro'yxatdan butunlay o'chiradi.
 
-feat: Yangi funksiya (feature) qo'shilganda.
-
-fix: Xatolik (bug) tuzatilganda.
-
-docs: Faqat hujjatlar (README, dokumentatsiya) o'zgarganda.
-
-chore: Kodga aloqador bo'lmagan mayda ishlar (paket o'rnatish, sozlamalar).
-
-Keling, ketma-ketlikda o'zgarishlar kiritib, 5 ta har xil turdagi commit yozamiz:
-
-Commit 1 (feat) - HTML faylni qo'shish
-Bash
-git add index.html
-git commit -m "feat: bosh sahifa uchun boshlang'ich HTML struktura"
-Commit 2 (docs) - README fayli
-Bash
-touch README.md
-echo "# Mening Loyiham" >> README.md
-git add README.md
-git commit -m "docs: loyihani ishga tushirish bo'yicha yo'riqnoma qo'shildi"
-Commit 3 (chore) - Git ignore yoki sozlamalar
-Bash
-touch .gitignore
-echo "node_modules/" >> .gitignore
-git add .gitignore
-git commit -m "chore: .gitignore fayli yaratildi va keraksiz qoplamalar kiritildi"
-Commit 4 (feat) - Yangi JS logikasi
-Bash
-touch app.js
-echo "console.log('Salom');" >> app.js
-git add app.js
-git commit -m "feat: foydalanuvchini salomlash funksiyasi yozildi"
-Commit 5 (fix) - Koddagi xatoni tuzatish
-Bash
-echo "console.log('Salom Dunyo!');" > app.js
-git add app.js
-git commit -m "fix: salomlashish matnidagi imlo xatosi tuzatildi"
-5. Multi-line Commit yozish (-m ni ikki marta ishlatish)
-Ba'zan commit sarlavhasidan tashqari, uning batafsil tavsifini (body) ham yozish kerak bo'ladi. Buning uchun terminalda -m flagini ketma-ket yozish mumkin:
+C) Untracked fayllar bilan ishlash (git stash -u)
+Standart git stash faqat Git nazoratida bo'lgan (tracked) fayllarni yashiradi. Yangi yaratilgan va hali git add qilinmagan fayllarni ham yashirish uchun -u (--include-untracked) flagi qo'shiladi:
 
 Bash
-echo "/* CSS styles */" > style.css
-git add style.css
-git commit -m "feat: sahifa uchun asosiy CSS stillar qo'shildi" -m "Batafsil: Tugmalar ranglari va responsive grid tizimi yozildi, ranglar WCAG standartlariga moslandi."
-6. Tarixni ko'rish (git log --oneline)
-Barcha qilingan ishlarni ixcham, bir qatorli ko'rinishda tekshiramiz. Bu terminaldagi tarixning simulyatsiyasi (screenshot o'rniga):
+git stash -u -m "feat: yangi komponent va chala kodlar"
+D) Stash ichidan yangi branch ochish (git stash branch)
+Agar stashda uzoq muddat qolib ketgan o'zgarishlar bo'lsa va ularni joriy branchga qo'shish ko'plab konfliktlar keltirib chiqarishi mumkin bo'lsa, o'sha stash asosida mutlaqo yangi branch ochish mumkin:
 
 Bash
-git log --oneline
-Terminaldagi natija:
+git stash branch feature-from-stash stash@{0}
+Bu buyruq yangi branch ochadi, stashni o'sha branchga qo'llaydi va muvaffaqiyatli bo'lsa stashni o'chirib yuboradi.
 
-Plaintext
-a1b2c3d (HEAD -> main) feat: sahifa uchun asosiy CSS stillar qo'shildi
-f5e4d3c fix: salomlashish matnidagi imlo xatosi tuzatildi
-b9e8d7c feat: foydalanuvchini salomlash funksiyasi yozildi
-c6b5a4f chore: .gitignore fayli yaratildi va keraksiz qoplamalar kiritildi
-d3c2b1a docs: loyihani ishga tushirish bo'yicha yo'riqnoma qo'shildi
-e9f8a7b feat: bosh sahifa uchun boshlang'ich HTML struktura
-(Chap tomondagi 7 ta belgili kodlar — har bir commit-ning unikal ID (hash) raqamlaridir).
+2. git cherry-pick — Kerakli Commitni Sug'urib Olish
+Boshqa branchdagi barcha o'zgarishlarni emas, balki faqat bitta yoki bir nechta aniq commitni joriy branchga nusxalab o'tkazish uchun ishlatiladi.
 
-7. Commit tafsilotlarini tekshirish (git show)
-Muayyan bitta commit ichida aynan qaysi qatorlar o'zgarganini batafsil ko'rish uchun git show buyrug'iga commit-ning boshidagi ID raqami beriladi (masalan, yuqoridagi ro'yxatdan f5e4d3c ni olamiz):
+A) Bitta va bir nechta commitni cherry-pick qilish:
+Bitta commit: ```bash
+git cherry-pick abc1234
+
+Bir nechta alohida commitlar:
 
 Bash
-git show f5e4d3c
-Terminaldagi natija:
+git cherry-pick abc1234 def5678
+Commitlar diapazoni (A dan B gacha):
 
-Plaintext
-commit f5e4d3c2b1a3f4e56789abcdef0123456789
-Author: Sardor Rahimov <sardor@example.com>
-Date:   Thu Jul 9 11:52:38 2026 +0500
+Bash
+git cherry-pick abc1234..g7h8i9j
+B) Cherry-pick Konfliktini Yechish:
+Agar o'tkazilayotgan commit joriy branchdagi kod bilan to'qnashsa, konflikt yuzaga keladi va Git jarayonni to'xtatadi. Uni yechish ketma-ketligi:
 
-    fix: salomlashish matnidagi imlo xatosi tuzatildi
+Fayllarga kirib, konflikt markerlarini (<<<<<<<, =======, >>>>>>>) o'chirib, kodni to'g'rilang.
 
-diff --git a/app.js b/app.js
-index e69de29..d123456 100644
---- a/app.js
-+++ b/app.js
-@@ -1 +1 @@
--console.log('Salom');
-+console.log('Salom Dunyo!');
-Tushuntirish: git show natijasida qizil rangda o'chirilgan eski qator (-console.log('Salom');) va yashil rangda qo'shilgan yangi qator (+console.log('Salom Dunyo!');) aniq ko'rinadi.
+To'g'rilangan fayllarni staging area'ga qo'shing: git add fayl.js
+
+Cherry-pick jarayonini davom ettiring:
+
+Bash
+git cherry-pick --continue
+(Agar cherry-pickni bekor qilmoqchi bo'lsangiz: git cherry-pick --abort)
+
+3. git commit --amend — Oxirgi Commitni Tahrirlash
+A) Commit xabarini tahrirlash:
+Agar oxirgi commit xabarida imlo xatosi ketgan bo'lsa yoki noto'g'ri matn yozilgan bo'lsa:
+
+Bash
+git commit --amend -m "fix: to'g'ri va mukammal commit matni"
+B) Yangi fayl yoki o'zgarish qo'shish (--no-edit):
+Agar commit qilib bo'gach, qaysidir faylni qo'shish esdan chiqqanini payqab qolsangiz, yangi commit yaratmasdan uni oxirgisiga qo'shib yuborish mumkin:
+
+Bash
+git add unutilgan-fayl.js
+git commit --amend --no-edit
+--no-edit flagi commit matnini o'zgartirmasdan, shunchaki yangi faylni oxirgi commit ichiga joylashtiradi.
+
+C) ⚠️ PUSH qilingan commitda AMEND qilish xavfi:
+Agar siz commitni GitHub/GitLab-ga push qilib bo'lgan bo'lsangiz, uni hech qachon localda amend qilmasligingiz kerak.
+
+Sababi: amend buyrug'i eski commitni shunchaki tahrirlamaydi, balki uni butunlay o'chirib, o'rniga yangi hash ID li mutlaqo yangi commit yaratadi.
+
+Agar push qilingan commitni amend qilib, qayta majburlab push (--force) qilsangiz, ushbu repozitoriyda ishlayotgan boshqa jamoa a'zolarining Git tarixi buziladi (git pull qilganda og'ir konfliktlar yuzaga keladi).
+
+4. Unumdorlikni Oshiruvchi 6 ta Foydali Git Alias
+Git buyruqlarini qisqartma shaklga keltirish orqali vaqtni sezilarli darajada tejash mumkin. Terminalda quyidagi konfiguratsiyalarni ishga tushiring:
+
+Bash
+# 1. git st -> git status
+git config --global alias.st status
+
+# 2. git co -> git checkout
+git config --global alias.co checkout
+
+# 3. git cm -> Conventional commit uchun qisqartma
+git config --global alias.cm "commit -m"
+
+# 4. git br -> Branchlar ro'yxati
+git config --global alias.br branch
+
+# 5. git sh -> Oxirgi chala ishlarni tezda yashirish (untracked fayllar bilan)
+git config --global alias.sh "stash -u -m"
+
+# 6. git lg -> Chiroyli, rangli va grafik shakldagi log tarixi
+git config --global alias.lg "log --graph --oneline --decorate --all"
+Endi uzoq buyruqlar o'rniga, masalan, shunchaki git lg yoki git st deb yozish kifoya qiladi.
+
+Keyingi darslarimiz yoki amaliy mashg'ulotlar uchun qaysi Git mavzusini chuqurroq o'rganishni istaysiz (masalan: git rebase yoki jamoada ishlash workflow'lari)?
