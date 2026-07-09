@@ -1,158 +1,119 @@
 # git-hub-2
-Mana, Git-da yuzaga kelishi mumkin bo'lgan eng qiyin va qo'rqinchli vaziyatlardan xotirjamlik bilan chiqib ketish bo'yicha amaliy va to'liq "Qutqaruv qo'llanmasi".
+Git — zamonaviy dasturlashda versiyalarni boshqarish tizimi (VCS) bo'lib, loyihadagi o'zgarishlarni bosqichma-bosqich yozib borish uchun xizmat qiladi. Quyida keltirilgan barcha Git buyruqlari va qadamlari amaliy ketma-ketlikda ko'rsatilgan.
 
-1. Senariy 1: Branch o'chirish + reflog bilan qaytarish
-Nima qildim?
-Siz o'z ustingizda ishlagan va hali mainga qo'shilmagan muhim feature-xyz branch'ingizni adashib o'chirib yubordingiz.
-
-Bash
-git branch -D feature-xyz
-(Git ogohlantirish bergan bo'lsa ham -D kaliti bilan majburlab o'chirib yuborildi).
-
-Nima bo'ldi?
-Branch ko'rinmay qoldi, unga checkout qilib bo'lmaydi. Kodlar yo'qolgandek tuyulmoqda.
-
-Qanday qutqardim?
-HEAD ko'rsatkichining oxirgi harakatlarini tekshiramiz:
+1. Global sozlamalarni o'rnatish (git config)
+Git-da birinchi marta ishlashdan oldin commit (o'zgarishlar) kim tomonidan qilinganini bilish uchun ism va elektron pochtani sozlash shart:
 
 Bash
-git reflog
-Chiqqan ro'yxatdan o'chib ketgan branch'ning eng oxirgi commit'ini (masalan, moving from feature-xyz to main yozuvidan bitta oldingi qatorni) va uning xesh kodini (masalan, b3c4d5e) topamiz.
-
-O'sha commit turgan joydan branch'ni qayta tiklaymiz:
-
-Bash
-git branch feature-xyz b3c4d5e
-2. Senariy 2: reset --hard + reflog bilan qaytarish
-Nima qildim?
-Oxirgi bir nechta commit'larni o'chirish maqsadida noto'g'ri masofani ko'rsatib, hamma narsani tozalab yuboradigan buyruqni berdingiz:
+git config --global user.name "Sardor Rahimov"
+git config --global user.email "sardor@example.com"
+2. Yangi loyiha ochish va uni faollashtirish (git init)
+Yangi papka ochamiz, uning ichiga kiramiz va bo'sh Git repozitoriysini ishga tushiramiz:
 
 Bash
-git reset --hard HEAD~3
-Nima bo'ldi?
-Oxirgi 3 ta commit va ularning ichidagi barcha yozilgan kodlar ham working directory'dan, ham tarixdan butunlay g'oyib bo'ldi.
+mkdir my-awesome-app
+cd my-awesome-app
+git init
+Natija: Papka ichida yashirin .git qoplami ochiladi. Bu Git barcha o'zgarishlarni yozib boradigan "miya" hisoblanadi.
 
-Qanday qutqardim?
-Git-ning xotira xaritasini ochamiz:
-
-Bash
-git reflog
-Biz reset buyrug'ini berishimizdan to'g'ri oldingi holatni (ro'yxatda HEAD@{1} yoki o'sha commit xeshini, masalan, a1b2c3d) aniqlaymiz.
-
-Vaqtni orqaga qaytaramiz:
+3. Ataylab xato: git add qilmasdan git commit yozish
+Git qanday ishlashini tushunish uchun yangi index.html faylini ochamiz va uni to'g'ridan-to'g'ri commit qilishga urinamiz:
 
 Bash
-git reset --hard a1b2c3d
-Hamma yo'qolgan kodlar va commit'lar o'z joyiga qaytadi.
+touch index.html
+git commit -m "feat: yangi bosh sahifa qo'shildi"
+Natija (Xatolik xabari):
 
-3. Senariy 3: Push qilingan yomon commit + revert bilan bekor
-Nima qildim?
-Lokalda xato kod yozdingiz, commit qildingiz va uni jamoaviy main (yoki develop) branch'ga push qilib yubordingiz:
+Plaintext
+On branch main
+Untracked files:
+  index.html
+
+nothing added to commit but untracked files present
+Sababi va tushuntirish: Git tizimida Staging Area (Kutish zal) tushunchasi bor. Fayl yaratilgach, u avval git add buyrug'i orqali kutish zaliga o'tkazilishi shart. Git loyihadagi har bir faylni o'z-o'zidan commit-ga qo'shmaydi. Biz unga qaysi fayllarni rasmga (commit) tushirish kerakligini git add orqali aytishimiz kerak.
+
+4. Ketma-ket 5 ta Commit (Conventional Commits formatida)
+Conventional Commits — dasturchilar orasidagi standart bo'lib, commit matnidan loyihada nima o'zgarganini darrov bilish imkonini beradi. Odatda quyidagi turlardan foydalaniladi:
+
+feat: Yangi funksiya (feature) qo'shilganda.
+
+fix: Xatolik (bug) tuzatilganda.
+
+docs: Faqat hujjatlar (README, dokumentatsiya) o'zgarganda.
+
+chore: Kodga aloqador bo'lmagan mayda ishlar (paket o'rnatish, sozlamalar).
+
+Keling, ketma-ketlikda o'zgarishlar kiritib, 5 ta har xil turdagi commit yozamiz:
+
+Commit 1 (feat) - HTML faylni qo'shish
+Bash
+git add index.html
+git commit -m "feat: bosh sahifa uchun boshlang'ich HTML struktura"
+Commit 2 (docs) - README fayli
+Bash
+touch README.md
+echo "# Mening Loyiham" >> README.md
+git add README.md
+git commit -m "docs: loyihani ishga tushirish bo'yicha yo'riqnoma qo'shildi"
+Commit 3 (chore) - Git ignore yoki sozlamalar
+Bash
+touch .gitignore
+echo "node_modules/" >> .gitignore
+git add .gitignore
+git commit -m "chore: .gitignore fayli yaratildi va keraksiz qoplamalar kiritildi"
+Commit 4 (feat) - Yangi JS logikasi
+Bash
+touch app.js
+echo "console.log('Salom');" >> app.js
+git add app.js
+git commit -m "feat: foydalanuvchini salomlash funksiyasi yozildi"
+Commit 5 (fix) - Koddagi xatoni tuzatish
+Bash
+echo "console.log('Salom Dunyo!');" > app.js
+git add app.js
+git commit -m "fix: salomlashish matnidagi imlo xatosi tuzatildi"
+5. Multi-line Commit yozish (-m ni ikki marta ishlatish)
+Ba'zan commit sarlavhasidan tashqari, uning batafsil tavsifini (body) ham yozish kerak bo'ladi. Buning uchun terminalda -m flagini ketma-ket yozish mumkin:
 
 Bash
-git push origin main
-Nima bo'ldi?
-Xatoli kod hamma jamoadoshlaringizga yetib bordi va serverdagi loyiha buzildi (build fail bo'ldi).
-
-Qanday qutqardim?
-Server tarixi ommaviy bo'lgani uchun uni reset bilan o'chirib bo'lmaydi (boshqalarda chalkashlik bo'ladi).
-
-O'sha yomon commit'ning xesh kodini (e5f6g7h) topamiz.
-
-Unga qarama-qarshi bo'lgan yangi tuzatuvchi commit yaratamiz:
+echo "/* CSS styles */" > style.css
+git add style.css
+git commit -m "feat: sahifa uchun asosiy CSS stillar qo'shildi" -m "Batafsil: Tugmalar ranglari va responsive grid tizimi yozildi, ranglar WCAG standartlariga moslandi."
+6. Tarixni ko'rish (git log --oneline)
+Barcha qilingan ishlarni ixcham, bir qatorli ko'rinishda tekshiramiz. Bu terminaldagi tarixning simulyatsiyasi (screenshot o'rniga):
 
 Bash
-git revert e5f6g7h
-Hosil bo'lgan yangi "safe" commit'ni serverga yuboramiz:
+git log --oneline
+Terminaldagi natija:
+
+Plaintext
+a1b2c3d (HEAD -> main) feat: sahifa uchun asosiy CSS stillar qo'shildi
+f5e4d3c fix: salomlashish matnidagi imlo xatosi tuzatildi
+b9e8d7c feat: foydalanuvchini salomlash funksiyasi yozildi
+c6b5a4f chore: .gitignore fayli yaratildi va keraksiz qoplamalar kiritildi
+d3c2b1a docs: loyihani ishga tushirish bo'yicha yo'riqnoma qo'shildi
+e9f8a7b feat: bosh sahifa uchun boshlang'ich HTML struktura
+(Chap tomondagi 7 ta belgili kodlar — har bir commit-ning unikal ID (hash) raqamlaridir).
+
+7. Commit tafsilotlarini tekshirish (git show)
+Muayyan bitta commit ichida aynan qaysi qatorlar o'zgarganini batafsil ko'rish uchun git show buyrug'iga commit-ning boshidagi ID raqami beriladi (masalan, yuqoridagi ro'yxatdan f5e4d3c ni olamiz):
 
 Bash
-git push origin main
-4. Senariy 4: Wrong branch'da commit + reset main'da + branch yaratish
-Nima qildim?
-Siz yangi vazifa uchun alohida branch ochish esingizdan chiqib, to'g'ridan-to'g'ri main branch'ida kod yozdingiz va 2 ta commit qilib yubordingiz.
+git show f5e4d3c
+Terminaldagi natija:
 
-Bash
-# Hozir main branch'damiz
-git commit -m "Yangi feature logikasi 1"
-git commit -m "Yangi feature logikasi 2"
-Nima bo'ldi?
-main branch tarixi buzildi, u yerda hali tugallanmagan xom kodlar paydo bo'lib qoldi.
+Plaintext
+commit f5e4d3c2b1a3f4e56789abcdef0123456789
+Author: Sardor Rahimov <sardor@example.com>
+Date:   Thu Jul 9 11:52:38 2026 +0500
 
-Qanday qutqardim?
-Hozirgi turgan joyimizdan (barcha yangi commit'lar bilan) yangi to'g'ri branch ochib olamiz:
+    fix: salomlashish matnidagi imlo xatosi tuzatildi
 
-Bash
-git checkout -b feature/my-new-task
-(Endi bu commit'lar xavfsiz joyda).
-
-Qayta main branch'iga o'tamiz:
-
-Bash
-git checkout main
-mainni o'sha 2 ta noto'g'ri commit qo'shilishidan oldingi holatiga qaytaramiz (kodlar o'chmaydi, chunki ular yangi branch'da qoldi):
-
-Bash
-git reset --hard HEAD~2
-5. Senariy 5: Detached HEAD'da ish + branch yaratish reflog'dan
-Nima qildim?
-Shunchaki eski commit'ni ko'rish uchun git checkout c3b2a1d qildingiz va o'sha yerda turib kod yozib, commit qilib yubordingiz.
-
-Nima bo'ldi?
-Siz Detached HEAD (hech qaysi branch'ga birikmagan erkin HEAD) holatida edingiz. Boshqa branch'ga (masalan, git checkout main) o'tganingizdan keyin o'sha yozgan commit'ingiz "havoda" muallaq qolib ketdi va yo'qoldi.
-
-Qanday qutqardim?
-Yana qutqaruvchimizni chaqiramiz:
-
-Bash
-git reflog
-Detached HEAD holatida qilgan commit'ingiz xesh kodini (masalan, f9e8d7c) topasiz.
-
-O'sha havoda qolib ketgan commit'ni o'z ichiga olgan yangi branch ochib, uni qutqarib qolasiz:
-
-Bash
-git branch saved-feature f9e8d7c
-Bonus Senariy 6: rebase --abort bilan bekor qilish
-Nima qildim?
-git rebase main buyrug'ini berdingiz, lekin juda ko'p va tushunarsiz konfliktlar (ziddiyatlar) chiqib ketdi. Kod chalkashib ketdi.
-
-Nima bo'ldi?
-Rebase jarayoni o'rtasida qolib ketdingiz, nima qilishni bilmayapsiz, lokal fayllar buzilgan holatda turibdi.
-
-Qanday qutqardim?
-Hech narsani qo'lda tuzatishga urinib o'tirmasdan, hammasini rebase boshlanishidan oldingi holatga qaytarish buyrug'ini berasiz:
-
-Bash
-git rebase --abort
-Loyiha xuddi rebase boshlanmagandek avvalgi holatiga qaytadi.
-
-Bonus Senariy 7: git fsck --lost-found ishlatish
-Nima qildim?
-Siz daxshatli chalkashlik qildingiz, hatto reflog ham tozalangan yoki u yerdan ham kerakli narsani topa olmayapsiz.
-
-Nima bo'ldi?
-Git obyektlar bazasida yetim (dangling) qolib ketgan, hech qaysi branch yoki havola ko'rsatmayotgan commit'lar bor, lekin ularning SHA xeshini bilmaysiz.
-
-Qanday qutqardim?
-Git-ning ichki fayl tizimini tekshirish (file system check) buyrug'ini bajaramiz:
-
-Bash
-git fsck --lost-found
-Natija: Git barcha yetim qolgan commit va fayllarni loyihangiz ichidagi .git/lost-found/commit/ papkasiga yig'ib beradi. U yerdagi commit'larni git show <commit_id> qilib ko'rib, ichidagi kodni topib olishingiz mumkin.
-
-Yakuniy Hisobot (Summary Report)
-Senariy	Nima qildim?	Nima bo'ldi?	Qanday qutqardim?	Olgan saboqlarim (Takeaways)
-1. Branch o'chirish	git branch -D	Branch tarixdan o'chdi	reflog + git branch <nomi> <sha>	Branch bu shunchaki pointer (ko'rsatkich). Commit'lar bazada turadi.
-2. Reset --hard	git reset --hard HEAD~3	Commit va kodlar yo'qoldi	reflog dan eski xeshni topib reset --hard	--hard xavfli, lekin lokal harakatlar doim reflogda muhrlanadi.
-3. Push yomon commit	git push origin main	Serverdagi loyiha buzildi	git revert <sha> + git push	Server tarixini o'chirma, xatoni teskari o'zgarish bilan tuzat.
-4. Wrong branch commit	mainda yangi kod yozildi	main tarixi bulg'andi	Yangi branch ochib, mainni reset --hard qilish	Ish boshlashdan oldin doim git status va to'g'ri branch'dalikni tekshir.
-5. Detached HEAD	Erkin holatda commit qilindi	Boshqa branch'ga o'tgach kod yo'qoldi	reflog dan commit SHA topib branch ochish	Detached HEAD rejimida uzoq qolma, darhol branch ochib ol.
-6. Rebase chalkashlik	Murakkab rebase konfliktlari	Rebase o'rtasida qolib ketish	git rebase --abort	Agar jarayon nazoratdan chiqsa, qo'rqmasdan abort qilish mumkin.
-7. Oxirgi chora (fsck)	Hamma narsa aralashib ketdi	Reflog'dan ham umid uzildi	git fsck --lost-found	Git hech narsani osonlikcha o'chirmaydi, fayl tizimidan ham qidirsa bo'ladi.
-Eng katta saboq: Panika qilmaslik!
-Git-da ishlashda eng muhim narsa buyruqlarni yodlash emas, balki xotirjamlikni saqlashdir.
-
-Git — bu vaqt mashinasi: Siz terminalda "o'chirish" buyrug'ini berganingizda, Git uni zaxira xotirasiga yashirib qo'yadi. Tizim sizni xatolardan himoya qilish uchun qurilgan.
-
-Qo'rquv xatoni kattalashtiradi: Panikaga tushgan dasturchi internetdan ko'rgan har xil kuchli force buyruqlarini ketma-ket yozib, ahvolni battar qiladi.
-
-Formula oddiy: Muammo bo'ldimi? Klaviaturadan qo'lingizni oling → Chuqur nafas oling → git status va git reflog buyruqlarini yozib, tarixni ko'zdan kechiring. Yechim doim o'sha yerda bo'ladi!
+diff --git a/app.js b/app.js
+index e69de29..d123456 100644
+--- a/app.js
++++ b/app.js
+@@ -1 +1 @@
+-console.log('Salom');
++console.log('Salom Dunyo!');
+Tushuntirish: git show natijasida qizil rangda o'chirilgan eski qator (-console.log('Salom');) va yashil rangda qo'shilgan yangi qator (+console.log('Salom Dunyo!');) aniq ko'rinadi.
